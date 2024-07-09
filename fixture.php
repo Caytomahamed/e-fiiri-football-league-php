@@ -50,7 +50,7 @@ require_once 'classes/Matches.php';
             }
 
 
-            // echo "<p >Matches on $formattedDate  $index: \n</p>";
+            // echo "<p style=' margin:12px 0;margin-left:20px; font-size:15px;'>Matches on $formattedDate  $index: \n</p>";
             echo "<div class='fixeture-box'>";
             foreach ($matches as $row) {
                 $onday = new DateTime($row['MATCH_DATE']);
