@@ -1,6 +1,6 @@
 # E-Fiiri Football League
 
-![Home Page](READMEIMG/hero.png)
+![Home Page](READMEIMG/hero.PNG)
 Welcome to E-Fiiri, the ultimate football league management system. This platform provides an interactive and comprehensive way to manage a football league, including team standings, match schedules, player information, and live score updates. Admins have powerful tools to manage matches, update scores in real-time, generate schedules for the entire season, and manage players.
 
 ## Features
@@ -11,7 +11,7 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
 - Latest news and updates
 - League statistics
 
-![Home Page](READMEIMG/home.png)
+![Home Page](READMEIMG/home.PNG)
 
 ### Standing Table
 
@@ -19,7 +19,7 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
 - Information includes games played, wins, draws, losses, goals for, goals against, goal difference, and points
 - Automatically updates standings after each match
 
-![Standing Page](READMEIMG/standing.png)
+![Standing Page](READMEIMG/standing.PNG)
 
 ### Match Schedule
 
@@ -27,13 +27,13 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
 - Detailed information on match dates, times, and venues
 - Ability to view past and upcoming matches
 
-![Match Schedule](READMEIMG/matches.png)
+![Match Schedule](READMEIMG/matches.PNG)
 
 ### Player Management
 
 - Add and view player information
 
-![Players Page](READMEIMG/addplayers.png)
+![Players Page](READMEIMG/addplayers.PNG)
 
 ### Match Management
 
@@ -42,7 +42,7 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
 - Update league standings when a match ends
 - Generate match schedules for the entire season
 
-![Update Score Page & League Update Page](READMEIMG/matches-manage.png)
+![Update Score Page & League Update Page](READMEIMG/matches-manage.PNG)
 
 ## Admin Features
 
@@ -68,16 +68,16 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
    ```
 2. Navigate to the project directory:
 
-    ```bash
-    cd e-fiiri-football-league-php
-    ```
+   ```bash
+   cd e-fiiri-football-league-php
+   ```
 
 3. Set up the database:
 
-    - [ ] Create a database in your MySQL server.
-    - [ ] Import the database schema from football.sql.
+   - [ ] Create a database in your MySQL server.
+   - [ ] Import the database schema from football.sql.
 
-4.  Start the development server
+4. Start the development server
 
 ## Usage
 
