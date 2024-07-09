@@ -1,0 +1,127 @@
+.dashboard {
+  display: flex;
+  /* min-height: 100vh; */
+}
+
+.dashboard .sidebar {
+  background-color: #111;
+  width: 250px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  height: 100vh;
+  height: 100%;
+  position: fixed;
+}
+
+.dashboard .sidebar .logout {
+  position: absolute;
+  bottom: 80px;
+}
+
+.dashboard .sidebar img {
+  width: 100px;
+  margin-top: 60px;
+  margin-bottom: 20px;
+}
+
+.dashboard .sidebar button {
+  padding: 10px 20px;
+  width: 200px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  text-align: left;
+}
+.dashboard .sidebar button a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+
+.dashboard .sidebar a button {
+  font-size: 1.2rem;
+}
+
+.dashboard .sidebar button.active {
+  background-color: #0056b3;
+}
+
+.dashboard-content {
+  margin-left: 320px;
+  margin-top: 60px;
+  scroll-behavior: smooth;
+}
+
+.dashboard-content h1 {
+  margin-bottom: 40px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dashboard-content .container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.dashboard-content .fixture-title {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+}
+
+////////////////////////////////////////
+.lives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  background-color: red;
+}
+
+.lives .img {
+  width: 60%;
+  height: 364px;
+  background-color: blue;
+  margin-right: 30px;
+  position: relative;
+  background: url('../images/matches.png') no-repeat center center/cover;
+}
+
+.lives .img2 {
+  width: 60%;
+  height: 364px;
+  background-color: blue;
+  margin-left: 80px;
+  position: relative;
+  background: url('../images/standing.png') no-repeat center center/cover;
+}
+.lives .img2::before,
+.lives .img::before,
+.lives .img3::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  z-index: 1;
+}
+
+.lives .img3 {
+  width: 60%;
+  height: 364px;
+  background-color: blue;
+  margin-right: 30px;
+  position: relative;
+  background: url('../images/fixtures.png') no-repeat center center/cover;
+}
