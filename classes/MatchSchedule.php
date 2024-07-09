@@ -116,17 +116,26 @@ class MatchSchedule extends Database
         shuffle($matches);
 
         $matchCount = 0;
+        $week = 1;
         while (!empty($matches)) {
+            $teamsPlayedThisWeek = [];
+
             // Schedule matches for Thursday
             for ($i = 0; $i < 2; $i++) {
                 if (empty($matches)) {
                     break;
                 }
 
-                $homeAway = array_shift($matches);
+                $homeAway = $this->getNextAvailableMatch($matches, $teamsPlayedThisWeek);
+                if ($homeAway === null) {
+                    break;
+                }
+
                 $venue = $this->getStadium($homeAway[0]);
                 $this->insertMatch($homeAway[0], $homeAway[1], $thursday, $venue);
 
+                $teamsPlayedThisWeek[] = $homeAway[0];
+                $teamsPlayedThisWeek[] = $homeAway[1];
                 $matchCount++;
             }
 
@@ -136,17 +145,35 @@ class MatchSchedule extends Database
                     break;
                 }
 
-                $homeAway = array_shift($matches);
+                $homeAway = $this->getNextAvailableMatch($matches, $teamsPlayedThisWeek);
+                if ($homeAway === null) {
+                    break;
+                }
+
                 $venue = $this->getStadium($homeAway[0]);
                 $this->insertMatch($homeAway[0], $homeAway[1], $friday, $venue);
 
+                $teamsPlayedThisWeek[] = $homeAway[0];
+                $teamsPlayedThisWeek[] = $homeAway[1];
                 $matchCount++;
             }
 
             // Move to next week
             $thursday = $this->getNextThursday($thursday);
             $friday = $this->getNextFriday($friday);
+            $week++;
         }
+    }
+
+    private function getNextAvailableMatch(&$matches, $teamsPlayedThisWeek)
+    {
+        foreach ($matches as $key => $match) {
+            if (!in_array($match[0], $teamsPlayedThisWeek) && !in_array($match[1], $teamsPlayedThisWeek)) {
+                unset($matches[$key]);
+                return $match;
+            }
+        }
+        return null;
     }
     private function getStadium($teamId)
     {

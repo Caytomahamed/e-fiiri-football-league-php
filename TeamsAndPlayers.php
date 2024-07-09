@@ -7,7 +7,6 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// Admin is logged in, display sensitive information or actions
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,18 +86,18 @@ $Teams = $standingTable->getTeams();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-foreach ($Teams as $team) {
-    echo '<tr>
+                        <?php
+                            foreach ($Teams as $team) {
+                            echo '<tr>
                                 <td>' . $team['TEAM_ID'] . '</td>
                                 <td><div>
-              <img src="images/teams/' . explode(' ', $team["TEAM_NAME"])[0] . '.svg" alt="team logo">
-                            <p>' . $team["TEAM_NAME"] . '</p>
-            </div></td>
+                                <img src="images/teams/' . explode(' ', $team["TEAM_NAME"])[0] . '.svg" alt="team logo">
+                                <p>' . $team["TEAM_NAME"] . '</p>
+                                </div></td>
                                 <td>' . $team['HOME_STADIUM'] . '</td>
                                 </tr>';
-}
-?>
+                            }
+                        ?>
                         </tbody>
                     </table>
                 </div>

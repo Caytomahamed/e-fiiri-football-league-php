@@ -71,8 +71,6 @@ class Matches extends Database
         $won = $team['WON'];
         $lost = $team['LOST'];
         $draw = $team['DRAW'];
-        $goalsFor += $team['GOALS_FOR'];
-        $goalsAgainst += $team['GOALS_AGAINST'];
         $points = $team['POINTS'];
 
         if ($goalsFor > $goalsAgainst) {
@@ -84,6 +82,11 @@ class Matches extends Database
             $draw++;
             $points++;
         }
+
+        // update goals
+        $goalsFor += $team['GOALS_FOR'];
+        $goalsAgainst += $team['GOALS_AGAINST'];
+
 
         // Update the league table with the new stats
         $sql = "UPDATE league
@@ -98,6 +101,8 @@ class Matches extends Database
 
         if (!mysqli_stmt_execute($stmt)) {
             echo "Error: " . mysqli_error($this->conn);
+            return;
         }
+        return;
     }
 }

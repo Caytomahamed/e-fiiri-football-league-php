@@ -21,8 +21,14 @@ require_once 'classes/Matches.php';
     foreach ($fixtures as $match) {
         $date = $match['MATCH_DATE'];
         $groupedByDate[$date][] = $match;
+
     }
     // var_dump($groupedByDate);
+
+    $index = 1;
+    $week = 1;
+    $printWeek = true;
+
 
     ?>
 
@@ -31,18 +37,35 @@ require_once 'classes/Matches.php';
         <?php
     if (count($fixtures) > 0) {
         foreach ($groupedByDate as $date => $matches) {
+
+            // format date
             $now = new DateTime($date);
             $longDateFormat = "D, F jS, Y";
             $formattedDate = $now->format($longDateFormat);
 
-            echo "<p class='matches-dates'>Matches on $formattedDate: \n</p>";
+
+            if($printWeek) {
+                $printWeek = false;
+                echo "<p class='matches-dates'> WEEK $week/18 " . "</p>";
+            }
+
+
+            // echo "<p >Matches on $formattedDate  $index: \n</p>";
             echo "<div class='fixeture-box'>";
             foreach ($matches as $row) {
                 $onday = new DateTime($row['MATCH_DATE']);
                 $longDateFormatDay = "D, F jS, Y";
                 $formattedDateDay = $now->format($longDateFormatDay);
 
+                if($index % 5 == 0 && $week < 18) {
+                    $week++;
+                    $printWeek = true;
+                }
+
+                $index++;
+
                 ?>
+
         <div class="match">
             <div class="teams">
                 <div>

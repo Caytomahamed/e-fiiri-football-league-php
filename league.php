@@ -63,9 +63,6 @@ if (count($standing) > 0) {
     foreach ($standing as $team) {
         ++$Id;
 
-        $team["POINTS"] = calculatePoints(intval($team["WON"]), intval($team["DRAW"]), intval($team["LOST"]));
-        $style = ($team["POSITION"] === '1') ? 'style="border-left: 5px solid blue;"' : '';
-
         if ($Id === 1) {
             $style = 'style="border-left: 5px solid blue;"';
         } elseif ($Id === 9 || $Id === 10) {
@@ -83,7 +80,7 @@ if (count($standing) > 0) {
            <td >
             <div>
               <img src="images/teams/' . explode(' ', $team["TEAM_NAME"])[0] . '.svg" alt="team logo">
-                            <p>' . $team["TEAM_NAME"] . '</p>
+              <p>' . $team["TEAM_NAME"] . '</p>
             </div>
             </td>
             <td >' . intval($team["WON"]) + intval($team["DRAW"]) + intval($team["LOST"]) . '</td>
