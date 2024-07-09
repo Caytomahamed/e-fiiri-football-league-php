@@ -1,6 +1,6 @@
+![Home Page](READMEIMG/hero.PNG)
 # E-Fiiri Football League
 
-![Home Page](READMEIMG/hero.PNG)
 Welcome to E-Fiiri, the ultimate football league management system. This platform provides an interactive and comprehensive way to manage a football league, including team standings, match schedules, player information, and live score updates. Admins have powerful tools to manage matches, update scores in real-time, generate schedules for the entire season, and manage players.
 
 ## Features
