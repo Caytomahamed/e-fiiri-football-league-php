@@ -1,6 +1,6 @@
 # E-Fiiri Football League
 
-![Home Page](READMEIMG/hero.png)
+![Home Page](./READMEIMG/hero.png)
 Welcome to E-Fiiri, the ultimate football league management system. This platform provides an interactive and comprehensive way to manage a football league, including team standings, match schedules, player information, and live score updates. Admins have powerful tools to manage matches, update scores in real-time, generate schedules for the entire season, and manage players.
 
 ## Features
@@ -64,21 +64,20 @@ Welcome to E-Fiiri, the ultimate football league management system. This platfor
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/e-fiiri-football-league.git
+   ghttps://github.com/Caytomahamed/e-fiiri-football-league-php.git
    ```
-
-2 - Navigate to the project directory:
+2. Navigate to the project directory:
 
 ```bash
  cd e-fiiri-football-league-php
 ```
 
-3 - Set up the database:
+3. Set up the database:
 
-- [ ] Create a database in your MySQL server.
-- [ ] Import the database schema from football.sql.
+    - [ ] Create a database in your MySQL server.
+    - [ ] Import the database schema from football.sql.
 
-4 - Start the development server
+4.  Start the development server
 
 ## Usage
 
