@@ -7,35 +7,30 @@ include_once $autoloaderPath;
 
 class MatchSchedule extends Database
 {
-    private $teams = [
-        ['TEAM_ID' => 1, 'TEAM_NAME' => 'Maaliyada FC', 'HOME_STADIUM' => 'Maaliyada Stadium'],
-        ['TEAM_ID' => 2, 'TEAM_NAME' => 'Asluubta GFC', 'HOME_STADIUM' => 'Asluubta Stadium'],
-        ['TEAM_ID' => 3, 'TEAM_NAME' => 'Dawlaada Hoose Hargeysa FC', 'HOME_STADIUM' => 'DHH Stadium'],
-        ['TEAM_ID' => 4, 'TEAM_NAME' => 'Tamarta FC', 'HOME_STADIUM' => 'Tamarta Stadium'],
-        ['TEAM_ID' => 5, 'TEAM_NAME' => 'Xidigaha Cirka FC', 'HOME_STADIUM' => 'Cirka Stadium'],
-        ['TEAM_ID' => 6, 'TEAM_NAME' => 'Gaashaan FC', 'HOME_STADIUM' => 'Gaashaan Stadium'],
-        ['TEAM_ID' => 7, 'TEAM_NAME' => 'Goodir FC', 'HOME_STADIUM' => 'Goodir Stadium'],
-        ['TEAM_ID' => 8, 'TEAM_NAME' => 'Caafimadka FC', 'HOME_STADIUM' => 'Caafimadka Stadium'],
-        ['TEAM_ID' => 9, 'TEAM_NAME' => 'Waxool FC', 'HOME_STADIUM' => 'Waxool Stadium'],
-        ['TEAM_ID' => 10, 'TEAM_NAME' => 'Ganacsiga FC', 'HOME_STADIUM' => 'Ganacsiga Stadium'],
-    ];
+    private $teams = [];
 
-    private $derbyMatches = [
-        ['TEAM_ID_1' => 7, 'TEAM_ID_2' => 2], // Goodir vs Asluubta
-        ['TEAM_ID_1' => 7, 'TEAM_ID_2' => 6], // Goodir vs Gaashaan
-        ['TEAM_ID_1' => 7, 'TEAM_ID_2' => 3], // Goodir vs Dawlaada Hoose
-        ['TEAM_ID_1' => 2, 'TEAM_ID_2' => 6], // Asluubta vs Gaashaan
-        ['TEAM_ID_1' => 2, 'TEAM_ID_2' => 3], // Asluubta vs Dawlaada Hoose
-        ['TEAM_ID_1' => 6, 'TEAM_ID_2' => 3], // Gaashaan vs Dawlaada Hoose
-    ];
-
-    public function deleteExistingMatches()
+    public function loadTeamsForCompetition($competitionId)
     {
-        $sql = "TRUNCATE TABLE fixtures";
-        if ($this->conn->query($sql) === true) {
-            // echo "Existing matches deleted successfully.";
-        } else {
-            echo "Error deleting matches: " . $this->conn->error;
+        $sql = "SELECT TEAMS.TEAM_ID, TEAMS.TEAM_NAME, TEAMS.HOME_STADIUM
+                FROM COMPETITION_TEAMS
+                JOIN TEAMS ON COMPETITION_TEAMS.TEAM_ID = TEAMS.TEAM_ID
+                WHERE COMPETITION_TEAMS.COMPETITION_ID = ? AND COMPETITION_TEAMS.GROUP_NAME IS NULL";
+        $stmt = mysqli_prepare($this->conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'i', $competitionId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $this->teams = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+        return $this->teams;
+    }
+
+    public function deleteExistingMatches($competitionId)
+    {
+        $sql = "DELETE FROM fixtures WHERE COMPETITION_ID = ?";
+        $stmt = mysqli_prepare($this->conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'i', $competitionId);
+        if (!mysqli_stmt_execute($stmt)) {
+            echo "Error deleting matches: " . mysqli_error($this->conn);
         }
     }
 
@@ -90,14 +85,31 @@ class MatchSchedule extends Database
         return date('Y-m-d', $timestamp);
     }
 
-    public function generateMatches()
+    public function generateMatches($competitionId)
     {
+        if (empty($this->teams)) {
+            $this->loadTeamsForCompetition($competitionId);
+        }
+
+        if (count($this->teams) < 2) {
+            echo "Error: competition needs at least 2 teams (assigned via 'Add Team to Competition') before generating a schedule.";
+            return;
+        }
+
         $startDate = Config::getStartDate();
         $thursday = $this->getNextThursday($startDate);
         $friday = $this->getNextFriday($startDate);
 
         $matches = [];
         $teamCount = count($this->teams);
+        $teamsIndexed = array_values($this->teams);
+
+        // If there's an odd number of teams, the circle method needs a placeholder "bye" slot
+        if ($teamCount % 2 !== 0) {
+            $teamsIndexed[] = null;
+            $teamCount++;
+        }
+
         for ($i = 0; $i < $teamCount - 1; $i++) {
             for ($j = 0; $j < $teamCount / 2; $j++) {
                 $home = ($i + $j) % ($teamCount - 1);
@@ -107,15 +119,18 @@ class MatchSchedule extends Database
                     $away = $teamCount - 1;
                 }
 
-                $matches[] = [$this->teams[$home]['TEAM_ID'], $this->teams[$away]['TEAM_ID']];
-                $matches[] = [$this->teams[$away]['TEAM_ID'], $this->teams[$home]['TEAM_ID']];
+                if ($teamsIndexed[$home] === null || $teamsIndexed[$away] === null) {
+                    continue;
+                }
+
+                $matches[] = [$teamsIndexed[$home]['TEAM_ID'], $teamsIndexed[$away]['TEAM_ID']];
+                $matches[] = [$teamsIndexed[$away]['TEAM_ID'], $teamsIndexed[$home]['TEAM_ID']];
             }
         }
 
         // Shuffle to ensure we don't always have home or away for each team
         shuffle($matches);
 
-        $matchCount = 0;
         $week = 1;
         while (!empty($matches)) {
             $teamsPlayedThisWeek = [];
@@ -132,15 +147,14 @@ class MatchSchedule extends Database
                 }
 
                 $venue = $this->getStadium($homeAway[0]);
-                $this->insertMatch($homeAway[0], $homeAway[1], $thursday, $venue);
+                $this->insertMatch($competitionId, $homeAway[0], $homeAway[1], $thursday, $venue);
 
                 $teamsPlayedThisWeek[] = $homeAway[0];
                 $teamsPlayedThisWeek[] = $homeAway[1];
-                $matchCount++;
             }
 
             // Schedule matches for Friday
-            for ($i = 0; $i < 3; $i++) {
+            for ($i = 0; $i < 2; $i++) {
                 if (empty($matches)) {
                     break;
                 }
@@ -151,11 +165,10 @@ class MatchSchedule extends Database
                 }
 
                 $venue = $this->getStadium($homeAway[0]);
-                $this->insertMatch($homeAway[0], $homeAway[1], $friday, $venue);
+                $this->insertMatch($competitionId, $homeAway[0], $homeAway[1], $friday, $venue);
 
                 $teamsPlayedThisWeek[] = $homeAway[0];
                 $teamsPlayedThisWeek[] = $homeAway[1];
-                $matchCount++;
             }
 
             // Move to next week
@@ -163,6 +176,23 @@ class MatchSchedule extends Database
             $friday = $this->getNextFriday($friday);
             $week++;
         }
+    }
+
+    // One-off group-stage/knockout tie, entered manually by an admin.
+    public function createSingleFixture($competitionId, $groupName, $roundName, $roundOrder, $homeTeamId, $awayTeamId, $date, $venue)
+    {
+        $groupName = $groupName !== '' ? $groupName : null;
+        $sql = "INSERT INTO fixtures (COMPETITION_ID, GROUP_NAME, ROUND_NAME, ROUND_ORDER, HOME_TEAM_ID, AWAY_TEAM_ID, MATCH_DATE, VENUE)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($this->conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'issiiiss', $competitionId, $groupName, $roundName, $roundOrder, $homeTeamId, $awayTeamId, $date, $venue);
+
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        echo "Error inserting fixture: " . mysqli_error($this->conn);
+        return false;
     }
 
     private function getNextAvailableMatch(&$matches, $teamsPlayedThisWeek)
@@ -175,6 +205,7 @@ class MatchSchedule extends Database
         }
         return null;
     }
+
     private function getStadium($teamId)
     {
         foreach ($this->teams as $team) {
@@ -185,18 +216,14 @@ class MatchSchedule extends Database
         return null;
     }
 
-    private function insertMatch($homeTeam, $awayTeam, $date, $venue)
+    private function insertMatch($competitionId, $homeTeam, $awayTeam, $date, $venue)
     {
-        $sql = "INSERT INTO fixtures (HOME_TEAM_ID, AWAY_TEAM_ID, MATCH_DATE, VENUE) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO fixtures (COMPETITION_ID, HOME_TEAM_ID, AWAY_TEAM_ID, MATCH_DATE, VENUE) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $fixture = $this->teams[$homeTeam - 1]['TEAM_NAME'] . " vs " . $this->teams[$awayTeam - 1]['TEAM_NAME'];
 
-        // Assuming you have variables containing home team ID, away team ID, and venue
-        $stmt->bind_param("ssss", $homeTeam, $awayTeam, $date, $venue);
+        $stmt->bind_param("iisss", $competitionId, $homeTeam, $awayTeam, $date, $venue);
 
-        if ($stmt->execute()) {
-            // echo "Match inserted: $fixture on $date at $venue\n";
-        } else {
+        if (!$stmt->execute()) {
             echo "Error inserting match: " . $stmt->error;
         }
 

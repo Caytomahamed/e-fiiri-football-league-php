@@ -4,11 +4,12 @@
 <body>
   <?php
 require_once 'classes/StandingTable.php';
-  // Create instances of classes
-  $standingTable = new StandingTable();
+require_once 'classes/Competition.php';
+require_once 'classes/Matches.php';
 
-  // Get standing table
-  $standing = $standingTable->getStandingTable();
+if (!isset($selectedCompetitionId)) {
+    require_once './competitionSelector.php';
+}
 
   function calculatePoints($wins, $draws, $losses)
   {
@@ -36,12 +37,9 @@ require_once 'classes/StandingTable.php';
       });
   }
 
-  // Sort the league table
-  sortByPoints($standing);
-  // var_dump($standing);
-
-  $standingTable->closeConnection();
-  ?>
+  function renderStandingsTable($standing)
+  {
+      ?>
   <table>
     <thead>
       <tr>
@@ -55,25 +53,31 @@ require_once 'classes/StandingTable.php';
         <th>Goals Agains</th>
         <th>Goal Differ</th>
         <th>Points</th>
+        <th>Status</th>
       </tr>
     </thead>
     <?php
-if (count($standing) > 0) {
-    $Id = 0;
-    foreach ($standing as $team) {
-        ++$Id;
+    if (count($standing) > 0) {
+        $Id = 0;
+        $total = count($standing);
+        foreach ($standing as $team) {
+            ++$Id;
 
-        if ($Id === 1) {
-            $style = 'style="border-left: 5px solid blue;"';
-        } elseif ($Id === 9 || $Id === 10) {
-            $style = 'style="border-left: 5px solid orange;"';
-        } else {
-            $style = '';
-        }
+            if ($Id === 1) {
+                $style = 'style="border-left: 5px solid blue;"';
+            } elseif ($Id > $total - 2) {
+                $style = 'style="border-left: 5px solid orange;"';
+            } else {
+                $style = '';
+            }
 
-        ?>
+            $hasSplitGoals = $team['GOALS_FOR'] !== null && $team['GOALS_AGAINST'] !== null;
+            $goalsFor = $hasSplitGoals ? intval($team['GOALS_FOR']) : null;
+            $goalsAgainst = $hasSplitGoals ? intval($team['GOALS_AGAINST']) : null;
+            $goalDiff = $hasSplitGoals ? ($goalsFor - $goalsAgainst) : ($team['GOAL_DIFF'] !== null ? intval($team['GOAL_DIFF']) : null);
+
+            ?>
     <tbody>
-      <!-- Populate with actual standings data dynamically -->
       <?php
             echo '<tr ' . $style . '>
             <td style="width:50px; text-align:center;">' . $Id . '</td>
@@ -87,23 +91,95 @@ if (count($standing) > 0) {
             <td>' . $team["WON"] . '</td>
             <td>' . $team["DRAW"] . '</td>
             <td>' . $team["LOST"] . '</td>
-            <td>' . $team["GOALS_FOR"] . '</td>
-            <td>' . $team["GOALS_AGAINST"] . '</td>
-            <td>' . intval($team["GOALS_FOR"]) - intval($team["GOALS_AGAINST"]) . '</td>
+            <td>' . ($goalsFor === null ? '-' : $goalsFor) . '</td>
+            <td>' . ($goalsAgainst === null ? '-' : $goalsAgainst) . '</td>
+            <td>' . ($goalDiff === null ? '-' : $goalDiff) . '</td>
             <td>' . $team["POINTS"] . '</td>
+            <td>' . ($team["STATUS"] !== null ? htmlspecialchars($team["STATUS"]) : '') . '</td>
 
           </tr>';
         ?>
 
-      <!-- More teams as needed -->
     </tbody>
     <?php
     }
 } else {
     echo "No Standing table found.";
 }
-  ?>
+?>
   </table>
+      <?php
+  }
+
+  function renderKnockoutList($fixturesList)
+  {
+      if (count($fixturesList) === 0) {
+          echo '<p>No knockout fixtures recorded yet.</p>';
+          return;
+      }
+
+      $groupedByRound = [];
+      foreach ($fixturesList as $f) {
+          $groupedByRound[$f['ROUND_NAME']][] = $f;
+      }
+
+      foreach ($groupedByRound as $roundName => $rows) {
+          echo '<h3 class="round-heading">' . htmlspecialchars($roundName) . '</h3>';
+          echo '<table><thead><tr><th>Home</th><th>Score</th><th>Away</th><th>Date</th></tr></thead><tbody>';
+          foreach ($rows as $row) {
+              if ($row['HOME_SCORE'] !== null) {
+                  $score = $row['HOME_SCORE'] . ' - ' . $row['AWAY_SCORE'];
+                  if ($row['HOME_PENALTIES'] !== null) {
+                      $score .= ' <span class="pens">(' . $row['HOME_PENALTIES'] . '-' . $row['AWAY_PENALTIES'] . ' pen)</span>';
+                  }
+              } elseif ($row['winnerTeam'] !== null) {
+                  $score = '<span class="pens">' . htmlspecialchars($row['winnerTeam']) . ' won' . ($row['NOTE'] ? ' (' . htmlspecialchars($row['NOTE']) . ')' : '') . '</span>';
+              } else {
+                  $score = 'vs';
+              }
+              $formattedDate = (new DateTime($row['MATCH_DATE']))->format('M jS, Y');
+              echo '<tr>
+                <td>' . htmlspecialchars($row['homeTeam']) . '</td>
+                <td style="text-align:center;">' . $score . '</td>
+                <td>' . htmlspecialchars($row['awayTeam']) . '</td>
+                <td>' . $formattedDate . '</td>
+              </tr>';
+          }
+          echo '</tbody></table>';
+      }
+  }
+
+  $standingTable = new StandingTable();
+  $competitionClass = new Competition();
+  $matchesClass = new Matches();
+
+  $type = $selectedCompetition !== null ? $selectedCompetition['TYPE'] : 'LEAGUE';
+
+  if ($type === 'GROUP_KNOCKOUT') {
+      $groups = $competitionClass->getGroupNames($selectedCompetitionId);
+      foreach ($groups as $g) {
+          $standing = $standingTable->getStandingTable($selectedCompetitionId, $g);
+          sortByPoints($standing);
+          echo '<h3 class="round-heading">Group ' . htmlspecialchars($g) . '</h3>';
+          renderStandingsTable($standing);
+      }
+
+      echo '<h2 style="margin-top:30px;">Knockout Stage</h2>';
+      $koFixtures = $matchesClass->getFixtures($selectedCompetitionId, null);
+      renderKnockoutList($koFixtures);
+  } elseif ($type === 'CUP') {
+      $koFixtures = $matchesClass->getFixtures($selectedCompetitionId, null);
+      renderKnockoutList($koFixtures);
+  } else {
+      $standing = $standingTable->getStandingTable($selectedCompetitionId, null);
+      sortByPoints($standing);
+      renderStandingsTable($standing);
+  }
+
+  $standingTable->closeConnection();
+  $competitionClass->closeConnection();
+  $matchesClass->closeConnection();
+  ?>
 </body>
 
 </html>

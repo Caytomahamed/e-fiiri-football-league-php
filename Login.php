@@ -7,49 +7,25 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     exit;
 }
 
-// Check if form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Hardcoded admin credentials
-    $adminEmail = "admin@gmail.com";
-    $adminPassword = "12345678";
-
-    // Retrieve form data
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-
-    // Validate credentials
-    if ($email === $adminEmail && $password === $adminPassword) {
-        // Mark admin as logged in
-        $_SESSION['admin_logged_in'] = true;
-        header("Location: admin.php");
-        exit;
-    } else {
-        $error = "Invalid email or password";
-    }
+// The login form now lives as a popup modal on home.php - this script is
+// just the POST handler behind it, so there is nothing to render here.
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: home.php");
+    exit;
 }
-?>
 
-<!DOCTYPE html>
-<html lang="en">
+// Hardcoded admin credentials
+$adminEmail = "admin@gmail.com";
+$adminPassword = "12345678";
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
-    <link rel="stylesheet" href="./css/index.css">
-    <link rel="stylesheet" href="./css/form.css">
-</head>
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
-<body>
-    <h1 style="text-align:center; margin-top:100px;margin-bottom:30px;font-size:2.5rem">Admin Login</h1>
-    <form method="post" style="width: 300px;">
-        <?php if (isset($error)) {?>
-        <p style="color: red;"><?=$error?></p>
-        <?php }?>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="submit" value="Login">
-    </form>
-</body>
+if ($email === $adminEmail && $password === $adminPassword) {
+    $_SESSION['admin_logged_in'] = true;
+    header("Location: admin.php");
+    exit;
+}
 
-</html>
+header("Location: home.php?login_error=1");
+exit;
